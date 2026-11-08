@@ -1,0 +1,29 @@
+{"from":"dave","goal":"round1","indirect":false,"kind":"task","label":"material handed to the council","to":"coordinator","ts":"2026-11-08T08:55:54"}
+{"from":"coordinator","goal":"round1","indirect":false,"kind":"task","label":"round 1 brief: the material, blind","to":"policy_analyst","ts":"2026-11-08T08:55:54"}
+{"from":"coordinator","goal":"round1","indirect":false,"kind":"task","label":"round 1 brief: the material, blind","to":"instructional_designer","ts":"2026-11-08T08:55:54"}
+{"from":"coordinator","goal":"round1","indirect":false,"kind":"task","label":"round 1 brief: the material, blind","to":"student","ts":"2026-11-08T08:55:54"}
+{"from":"instructional_designer","goal":"round1","indirect":false,"kind":"write","label":"started thinking","to":"instructional_designer","ts":"2026-11-08T08:55:54"}
+{"from":"policy_analyst","goal":"round1","indirect":false,"kind":"write","label":"started thinking","to":"policy_analyst","ts":"2026-11-08T08:55:54"}
+{"from":"student","goal":"round1","indirect":false,"kind":"write","label":"started thinking","to":"student","ts":"2026-11-08T08:55:54"}
+{"from":"instructional_designer","goal":"round1","indirect":false,"kind":"result","label":"brief written: [ROUND 1 stand-in reply from the an instructional designer who builds graduate courses] Th","to":"files","ts":"2026-11-08T08:55:57"}
+{"from":"policy_analyst","goal":"round1","indirect":false,"kind":"result","label":"brief written: [ROUND 1 stand-in reply from the a policy analyst who has briefed cabinet-level officials]","to":"files","ts":"2026-11-08T08:56:00"}
+{"from":"student","goal":"round1","indirect":false,"kind":"result","label":"brief written: [ROUND 1 stand-in reply from the a second-year public-policy graduate student taking this ","to":"files","ts":"2026-11-08T08:56:02"}
+{"from":"instructional_designer","goal":"round2","indirect":false,"kind":"read","label":"instructional_designer brief sent to policy_analyst","to":"policy_analyst","ts":"2026-11-08T08:56:02"}
+{"from":"student","goal":"round2","indirect":false,"kind":"read","label":"student brief sent to policy_analyst","to":"policy_analyst","ts":"2026-11-08T08:56:02"}
+{"from":"policy_analyst","goal":"round2","indirect":false,"kind":"read","label":"policy_analyst brief sent to instructional_designer","to":"instructional_designer","ts":"2026-11-08T08:56:02"}
+{"from":"student","goal":"round2","indirect":false,"kind":"read","label":"student brief sent to instructional_designer","to":"instructional_designer","ts":"2026-11-08T08:56:02"}
+{"from":"policy_analyst","goal":"round2","indirect":false,"kind":"read","label":"policy_analyst brief sent to student","to":"student","ts":"2026-11-08T08:56:02"}
+{"from":"instructional_designer","goal":"round2","indirect":false,"kind":"read","label":"instructional_designer brief sent to student","to":"student","ts":"2026-11-08T08:56:02"}
+{"from":"student","goal":"round2","indirect":false,"kind":"write","label":"started thinking","to":"student","ts":"2026-11-08T08:56:02"}
+{"from":"policy_analyst","goal":"round2","indirect":false,"kind":"write","label":"started thinking","to":"policy_analyst","ts":"2026-11-08T08:56:02"}
+{"from":"instructional_designer","goal":"round2","indirect":false,"kind":"write","label":"started thinking","to":"instructional_designer","ts":"2026-11-08T08:56:02"}
+{"from":"student","goal":"round2","indirect":false,"kind":"result","label":"rebuttal written: [ROUND 2 stand-in reply from the a second-year public-policy graduate student taking this ","to":"files","ts":"2026-11-08T08:56:05"}
+{"from":"policy_analyst","goal":"round2","indirect":false,"kind":"result","label":"rebuttal written: [ROUND 2 stand-in reply from the a policy analyst who has briefed cabinet-level officials]","to":"files","ts":"2026-11-08T08:56:07"}
+{"from":"instructional_designer","goal":"round2","indirect":false,"kind":"result","label":"rebuttal written: [ROUND 2 stand-in reply from the an instructional designer who builds graduate courses] Th","to":"files","ts":"2026-11-08T08:56:11"}
+{"from":"policy_analyst","goal":"round3","indirect":false,"kind":"read","label":"policy_analyst brief and rebuttal to the adjudicator","to":"adjudicator","ts":"2026-11-08T08:56:11"}
+{"from":"instructional_designer","goal":"round3","indirect":false,"kind":"read","label":"instructional_designer brief and rebuttal to the adjudicator","to":"adjudicator","ts":"2026-11-08T08:56:11"}
+{"from":"student","goal":"round3","indirect":false,"kind":"read","label":"student brief and rebuttal to the adjudicator","to":"adjudicator","ts":"2026-11-08T08:56:11"}
+{"from":"coordinator","goal":"round3","indirect":false,"kind":"task","label":"rule on the debate","to":"adjudicator","ts":"2026-11-08T08:56:11"}
+{"from":"adjudicator","goal":"round3","indirect":false,"kind":"write","label":"started thinking","to":"adjudicator","ts":"2026-11-08T08:56:11"}
+{"from":"adjudicator","goal":"round3","indirect":false,"kind":"result","label":"ruling written","to":"files","ts":"2026-11-08T08:56:14"}
+{"from":"coordinator","goal":"round3","indirect":false,"kind":"result","label":"ruling ready for Dave","to":"dave","ts":"2026-11-08T08:56:14"}

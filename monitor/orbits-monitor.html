@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbits: agent collaboration monitor (prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#14213D;--paper:#F6F3EC;--cream:#ECE6D8;--amber:#A86F1C;--amberl:#E3A84A;--ink:#4A5568;--inkd:#BFCBDA;--line:#8A94A6;--teal:#2F6F7E;--red:#B5452E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--navy);color:var(--paper);font-family:"IBM Plex Sans",system-ui,sans-serif;height:100vh;display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:1fr 340px}
+header{grid-column:1/3;display:flex;align-items:baseline;gap:18px;padding:14px 22px 8px;border-bottom:1px solid rgba(191,203,218,.18)}
+header h1{font-family:"EB Garamond",serif;font-weight:600;font-size:26px;margin:0}
+header .eyebrow{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--amberl)}
+header .spacer{flex:1}
+header .mode{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--inkd)}
+header .mode b{color:var(--amberl);font-weight:500}
+#stage{position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+aside{border-left:1px solid rgba(191,203,218,.18);display:flex;flex-direction:column;min-height:0}
+aside h2{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--amberl);margin:0;padding:12px 16px 6px;font-weight:500}
+#goals{padding:0 16px 8px;display:grid;gap:6px}
+.goal{display:grid;grid-template-columns:12px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.goal i{width:12px;height:12px;border-radius:50%;display:block}
+.goal .bar{height:4px;background:rgba(191,203,218,.15);border-radius:2px;grid-column:2/3;position:relative;top:-2px}
+.goal .bar b{display:block;height:100%;border-radius:2px;background:var(--amberl)}
+.goal small{font-family:"JetBrains Mono",monospace;color:var(--inkd);font-size:11px}
+#log{flex:1;overflow:auto;padding:0 8px 8px 16px;font-size:12.5px;line-height:1.35}
+.ev{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:5px 6px;border-radius:6px;border-left:3px solid transparent}
+.ev.live{background:rgba(227,168,74,.12);border-left-color:var(--amberl)}
+.ev time{font-family:"JetBrains Mono",monospace;color:var(--inkd);font-size:11px;padding-top:1px}
+.ev .who{color:var(--paper);font-weight:500}
+.ev .who span{color:var(--inkd);font-weight:400}
+.ev .what{color:var(--inkd)}
+.ev.read .who{color:var(--amberl)}
+footer{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:10px 22px;border-top:1px solid rgba(191,203,218,.18);font-size:13px}
+footer button{background:transparent;color:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:inherit;cursor:pointer}
+footer button:hover{border-color:var(--amberl);color:var(--amberl)}
+footer input[type=range]{flex:1;accent-color:var(--amberl)}
+footer .t{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--inkd);min-width:150px}
+footer label{color:var(--inkd);display:flex;gap:6px;align-items:center}
+footer input[type=text]{background:rgba(246,243,236,.06);border:1px solid var(--line);color:var(--paper);border-radius:6px;padding:5px 8px;font:inherit;font-size:12px;width:210px}
+#legend{position:absolute;left:18px;bottom:14px;font-size:12px;color:var(--inkd);display:grid;gap:4px;background:rgba(20,33,61,.7);padding:8px 10px;border-radius:8px}
+#legend div{display:flex;gap:8px;align-items:center}
+#legend i{width:22px;height:0;border-top:2px solid;display:block}
+#tip{position:absolute;pointer-events:none;background:var(--paper);color:var(--navy);padding:6px 9px;border-radius:6px;font-size:12px;max-width:260px;display:none;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#tip b{display:block;font-weight:600}
+</style></head><body>
+<header>
+  <span class="eyebrow">Prototype</span>
+  <h1>Orbits: who is working toward what, right now</h1>
+  <span class="spacer"></span>
+  <span class="mode" id="mode">Replaying <b>runs.jsonl</b> (32 events, 6 to 8 Nov)</span>
+</header>
+<div id="stage"><canvas id="c"></canvas>
+  <div id="legend">
+    <div><i style="border-color:#E3A84A"></i>task handed out</div>
+    <div><i style="border-color:#BFCBDA"></i>result or write back</div>
+    <div><i style="border-color:#B5452E;border-top-style:dashed"></i>indirect read (one agent read another's output)</div>
+    <div><i style="border-color:#2F6F7E;border-top-style:dotted"></i>post to Slack</div>
+  </div>
+  <div id="tip"></div>
+</div>
+<aside>
+  <h2>Goals (center of the orbit)</h2>
+  <div id="goals"></div>
+  <h2>Event stream</h2>
+  <div id="log"></div>
+</aside>
+<footer>
+  <button id="play">Pause</button>
+  <button id="step">Step</button>
+  <button id="reset">Restart</button>
+  <input type="range" id="scrub" min="0" max="32" value="0" step="1">
+  <span class="t" id="clock">—</span>
+  <label>Speed <select id="speed"><option>0.5</option><option selected>1</option><option>2</option><option>4</option></select></label>
+  <label>Live source <input type="text" id="src" placeholder="http://localhost:8787/runs.jsonl"></label>
+  <button id="connect">Connect</button>
+</footer>
+<script>
+const META = {"goals": {"charter": "Charter and research", "tech": "Technical deck", "review": "Review and fixes", "access": "Accessible deck", "story": "Story arc"}, "agents": {"dave": {"label": "Dave", "sub": "decides"}, "coord": {"label": "Coordinator", "sub": "the hub"}, "files": {"label": "Project files", "sub": "shared store"}, "smes": {"label": "SME agents (7)", "sub": "7 solo runs"}, "reviewers": {"label": "Reviewers (4)", "sub": "4 solo runs"}, "rivals": {"label": "Rivals (3)", "sub": "3 blind runs"}, "judge": {"label": "Adjudicator", "sub": "reads rivals"}, "slack": {"label": "#ai-roi-lecture", "sub": "the log"}}};
+const EVENTS = [{"ts": "2026-11-06T09:00", "from": "dave", "to": "coord", "kind": "task", "goal": "charter", "label": "thesis, audience, source rules", "indirect": false}, {"ts": "2026-11-06T09:55", "from": "coord", "to": "files", "kind": "task", "goal": "charter", "label": "charter v1", "indirect": false}, {"ts": "2026-11-06T10:51", "from": "coord", "to": "slack", "kind": "post", "goal": "charter", "label": "channel opened; start notes", "indirect": false}, {"ts": "2026-11-06T11:47", "from": "coord", "to": "smes", "kind": "task", "goal": "charter", "label": "charter + Dave's papers and decks (7 parallel runs)", "indirect": false}, {"ts": "2026-11-06T12:42", "from": "smes", "to": "files", "kind": "result", "goal": "charter", "label": "7 briefs, one each; no brief read another", "indirect": false}, {"ts": "2026-11-06T13:38", "from": "coord", "to": "files", "kind": "write", "goal": "charter", "label": "read all 7; reconciliation notes", "indirect": false}, {"ts": "2026-11-06T14:34", "from": "coord", "to": "dave", "kind": "task", "goal": "charter", "label": "research gate: 15 questions, 3 themes", "indirect": false}, {"ts": "2026-11-06T15:30", "from": "dave", "to": "coord", "kind": "result", "goal": "charter", "label": "answers; theme chosen", "indirect": false}, {"ts": "2026-11-07T08:00", "from": "coord", "to": "smes", "kind": "write", "goal": "tech", "label": "theme, cases, verification (3 more runs)", "indirect": false}, {"ts": "2026-11-07T08:30", "from": "smes", "to": "files", "kind": "result", "goal": "tech", "label": "3 briefs", "indirect": false}, {"ts": "2026-11-07T09:00", "from": "coord", "to": "files", "kind": "task", "goal": "tech", "label": "technical deck (25 slides) from all 10 briefs", "indirect": false}, {"ts": "2026-11-07T09:30", "from": "coord", "to": "reviewers", "kind": "task", "goal": "review", "label": "deck + own briefs + verification sheet (4 parallel runs)", "indirect": false}, {"ts": "2026-11-07T10:00", "from": "files", "to": "reviewers", "kind": "read", "goal": "review", "label": "verification sheet (an agent's output, read by 4 agents)", "indirect": true}, {"ts": "2026-11-07T10:30", "from": "reviewers", "to": "files", "kind": "result", "goal": "review", "label": "4 review notes; none read another", "indirect": false}, {"ts": "2026-11-07T11:00", "from": "coord", "to": "files", "kind": "write", "goal": "review", "label": "fixes applied to the deck", "indirect": false}, {"ts": "2026-11-07T11:30", "from": "coord", "to": "slack", "kind": "post", "goal": "review", "label": "review summary; what is left for Dave", "indirect": false}, {"ts": "2026-11-07T12:00", "from": "dave", "to": "coord", "kind": "task", "goal": "access", "label": "too dense; build a rival-agent team", "indirect": false}, {"ts": "2026-11-07T12:33", "from": "coord", "to": "rivals", "kind": "task", "goal": "access", "label": "syllabus + charter + deck; told what the others will argue (3 parallel runs)", "indirect": false}, {"ts": "2026-11-07T13:06", "from": "rivals", "to": "files", "kind": "result", "goal": "access", "label": "3 briefs, written blind", "indirect": false}, {"ts": "2026-11-07T13:39", "from": "coord", "to": "judge", "kind": "task", "goal": "access", "label": "syllabus + charter + deck + all 3 rival briefs", "indirect": false}, {"ts": "2026-11-07T14:12", "from": "files", "to": "judge", "kind": "read", "goal": "access", "label": "the three rival briefs (the one many-to-one read)", "indirect": true}, {"ts": "2026-11-07T14:45", "from": "judge", "to": "files", "kind": "result", "goal": "access", "label": "ruling: criteria, outline, risks", "indirect": false}, {"ts": "2026-11-07T15:18", "from": "coord", "to": "dave", "kind": "task", "goal": "access", "label": "the ruling, before building", "indirect": false}, {"ts": "2026-11-07T15:51", "from": "coord", "to": "files", "kind": "write", "goal": "access", "label": "accessible deck v1 (forecast spine)", "indirect": false}, {"ts": "2026-11-07T16:24", "from": "coord", "to": "reviewers", "kind": "write", "goal": "review", "label": "skeptic pass: deck v1 + technical deck + ruling", "indirect": false}, {"ts": "2026-11-07T16:57", "from": "files", "to": "reviewers", "kind": "read", "goal": "review", "label": "the adjudication (read by the skeptic)", "indirect": true}, {"ts": "2026-11-07T17:30", "from": "reviewers", "to": "files", "kind": "result", "goal": "review", "label": "3 must-fixes", "indirect": false}, {"ts": "2026-11-07T18:00", "from": "dave", "to": "coord", "kind": "task", "goal": "story", "label": "forecast spine does not work; grown, not built", "indirect": false}, {"ts": "2026-11-07T22:00", "from": "coord", "to": "dave", "kind": "result", "goal": "story", "label": "three-act arc doc", "indirect": false}, {"ts": "2026-11-08T02:00", "from": "dave", "to": "coord", "kind": "result", "goal": "story", "label": "go ahead", "indirect": false}, {"ts": "2026-11-08T06:00", "from": "coord", "to": "files", "kind": "task", "goal": "access", "label": "accessible deck rebuilt; must-fixes folded in", "indirect": false}, {"ts": "2026-11-08T10:00", "from": "coord", "to": "slack", "kind": "post", "goal": "story", "label": "both decks, arc, status", "indirect": false}];
+const COLORS = {task:"#E3A84A", result:"#BFCBDA", write:"#BFCBDA", read:"#B5452E", post:"#2F6F7E"};
+const GOAL_COLORS = ["#E3A84A","#2F6F7E","#BFCBDA","#C96A4A","#F6F3EC","#7BA0B5"];
+const goalIds = Object.keys(META.goals);
+const goalColor = Object.fromEntries(goalIds.map((g,i)=>[g,GOAL_COLORS[i%GOAL_COLORS.length]]));
+
+// agents: everything that sends or receives. "files" and "slack" are stores, drawn as squares on the outer ring.
+const agentIds = Object.keys(META.agents);
+const isStore = id => id==="files" || id==="slack";
+const agents = {};
+agentIds.forEach((id,i)=>{
+  agents[id] = {id, label:META.agents[id].label, sub:META.agents[id].sub,
+    ring: id==="dave"?0.42 : isStore(id)?1.0 : 0.72,       // fraction of max radius
+    angle: (i/agentIds.length)*Math.PI*2 - Math.PI/2, speed: isStore(id)?0.04:(id==="dave"?0.06:0.11),
+    goal:null, pull:0, glow:0, count:0};
+});
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const tip = document.getElementById('tip');
+let W,H,cx,cy,R;
+function resize(){ const r=cv.parentElement.getBoundingClientRect(); W=cv.width=r.width*devicePixelRatio; H=cv.height=r.height*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); cx=r.width/2; cy=r.height/2; R=Math.min(r.width,r.height)*0.42; }
+window.addEventListener('resize',resize); resize();
+
+// goal positions: small inner ring at the center
+function goalPos(g){ const i=goalIds.indexOf(g), n=goalIds.length; const a=(i/n)*Math.PI*2-Math.PI/2; const r=R*0.13; return {x:cx+Math.cos(a)*r, y:cy+Math.sin(a)*r}; }
+function agentPos(a){ let r=R*a.ring; if(a.goal && a.pull>0){ /* lean toward the goal it serves */ } return {x:cx+Math.cos(a.angle)*r, y:cy+Math.sin(a.angle)*r}; }
+
+// playback state
+let idx=0, playing=true, lastTick=performance.now(), speed=1, pulses=[], goalCount={}, liveTimer=null, liveSeen=0;
+goalIds.forEach(g=>goalCount[g]=0);
+const total = ()=>EVENTS.length;
+
+function applyEvent(e, flash=true){
+  const a=agents[e.from], b=agents[e.to]; if(!a||!b) return;
+  a.goal=e.goal; a.glow=1; a.count++; if(!isStore(b.id)){ b.goal=e.goal; b.glow=1; }
+  goalCount[e.goal]=(goalCount[e.goal]||0)+1;
+  // nudge both toward each other's angle a little, so collaborators cluster
+  const d=((b.angle-a.angle+Math.PI*3)%(Math.PI*2))-Math.PI; a.angle+=d*0.08; if(!isStore(b.id)) b.angle-=d*0.08;
+  if(flash) pulses.push({e, t:0, from:a, to:b});
+  logEvent(e);
+  renderGoals();
+}
+function undoTo(n){ // rebuild state up to n events (used by scrubber)
+  Object.values(agents).forEach(a=>{a.goal=null;a.glow=0;a.count=0}); goalIds.forEach(g=>goalCount[g]=0); pulses=[]; document.getElementById('log').innerHTML='';
+  for(let i=0;i<n;i++) applyEvent(EVENTS[i], false); idx=n; updateClock();
+}
+function fmt(ts){ const d=new Date(ts); return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).replace(',',''); }
+function logEvent(e){
+  const log=document.getElementById('log');
+  log.querySelectorAll('.ev.live').forEach(x=>x.classList.remove('live'));
+  const div=document.createElement('div'); div.className='ev live '+e.kind;
+  div.innerHTML=`<time>${fmt(e.ts).slice(0,6)}<br>${fmt(e.ts).slice(7)}</time><div><div class="who">${agents[e.from].label} <span>→</span> ${agents[e.to].label} <span>· ${META.goals[e.goal]}</span></div><div class="what">${e.label}${e.indirect?' <b style="color:#E3A84A">(indirect read)</b>':''}</div></div>`;
+  log.appendChild(div); log.scrollTop=log.scrollHeight;
+}
+function renderGoals(){
+  const el=document.getElementById('goals'); const max=Math.max(1,...Object.values(goalCount));
+  el.innerHTML=goalIds.map(g=>`<div class="goal"><i style="background:${goalColor[g]}"></i><span>${META.goals[g]}</span><small>${goalCount[g]} ev</small><span class="bar"><b style="width:${Math.round(100*goalCount[g]/max)}%;background:${goalColor[g]}"></b></span></div>`).join('');
+}
+function updateClock(){ document.getElementById('clock').textContent = idx>0 ? fmt(EVENTS[idx-1].ts) : '—'; document.getElementById('scrub').value=idx; document.getElementById('scrub').max=total(); }
+
+function draw(dt){
+  const r=cv.getBoundingClientRect(); ctx.clearRect(0,0,r.width,r.height);
+  // rings
+  ctx.strokeStyle='rgba(191,203,218,.12)'; ctx.lineWidth=1;
+  [0.42,0.72,1.0].forEach(f=>{ctx.beginPath();ctx.arc(cx,cy,R*f,0,Math.PI*2);ctx.stroke();});
+  // goals in the center
+  goalIds.forEach(g=>{ const p=goalPos(g); const n=goalCount[g]; const rad=10+Math.min(14,n*0.9);
+    ctx.beginPath(); ctx.arc(p.x,p.y,rad,0,Math.PI*2); ctx.fillStyle=goalColor[g]; ctx.globalAlpha=n?0.95:0.35; ctx.fill(); ctx.globalAlpha=1;
+    ctx.fillStyle='#14213D'; ctx.font='500 10px "JetBrains Mono"'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(n),p.x,p.y);
+  });
+  ctx.fillStyle='#BFCBDA'; ctx.font='600 13px "EB Garamond"'; ctx.textAlign='center'; ctx.fillText('goals', cx, cy+R*0.13+26);
+  // tethers: agent to its current goal
+  Object.values(agents).forEach(a=>{ if(!a.goal||isStore(a.id)) return; const p=agentPos(a), g=goalPos(a.goal);
+    ctx.strokeStyle=goalColor[a.goal]; ctx.globalAlpha=0.18+0.5*a.glow; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(g.x,g.y); ctx.stroke(); ctx.globalAlpha=1; });
+  // pulses: message flashes along the edge
+  pulses.forEach(pl=>{ pl.t+=dt*0.9; const A=agentPos(pl.from), B=agentPos(pl.to); const k=Math.min(1,pl.t);
+    ctx.setLineDash(pl.e.kind==='read'?[6,5]:pl.e.kind==='post'?[2,5]:[]); ctx.strokeStyle=COLORS[pl.e.kind]; ctx.lineWidth=2.2; ctx.globalAlpha=Math.max(0,1-(pl.t-1)*0.6);
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(A.x+(B.x-A.x)*k, A.y+(B.y-A.y)*k); ctx.stroke(); ctx.setLineDash([]);
+    const px=A.x+(B.x-A.x)*k, py=A.y+(B.y-A.y)*k; ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fillStyle=COLORS[pl.e.kind]; ctx.fill(); ctx.globalAlpha=1; });
+  pulses=pulses.filter(p=>p.t<2.6);
+  // agents
+  Object.values(agents).forEach(a=>{ a.angle+=a.speed*dt*(playing?1:0); a.glow=Math.max(0,a.glow-dt*0.5); const p=agentPos(a); a._p=p;
+    const rad=isStore(a.id)?9:12+Math.min(10,a.count*0.6);
+    ctx.shadowColor=a.goal?goalColor[a.goal]:'transparent'; ctx.shadowBlur=a.glow*28;
+    ctx.beginPath(); if(isStore(a.id)) ctx.rect(p.x-rad,p.y-rad,rad*2,rad*2); else ctx.arc(p.x,p.y,rad,0,Math.PI*2);
+    ctx.fillStyle=a.id==='dave'?'#F6F3EC':a.id==='coord'?'#E3A84A':isStore(a.id)?'#4A5568':'#2F6F7E'; ctx.fill(); ctx.shadowBlur=0;
+    if(a.goal&&!isStore(a.id)){ ctx.lineWidth=2.5; ctx.strokeStyle=goalColor[a.goal]; ctx.stroke(); }
+    ctx.fillStyle='#F6F3EC'; ctx.font='500 12px "IBM Plex Sans"'; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText(a.label,p.x,p.y+rad+5);
+    ctx.fillStyle='#BFCBDA'; ctx.font='400 10.5px "JetBrains Mono"'; ctx.fillText(a.count?`${a.count} ev`:a.sub,p.x,p.y+rad+20);
+  });
+}
+let last=performance.now(), acc=0;
+function frame(now){ const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(playing && !liveTimer){ acc+=dt*speed; const gap=1.6; if(acc>gap && idx<total()){ acc=0; applyEvent(EVENTS[idx]); idx++; updateClock(); if(idx>=total()){ playing=false; document.getElementById('play').textContent='Play'; } } }
+  draw(dt); requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+
+// controls
+document.getElementById('play').onclick=e=>{ playing=!playing; e.target.textContent=playing?'Pause':'Play'; if(playing&&idx>=total()){undoTo(0);} };
+document.getElementById('step').onclick=()=>{ if(idx<total()){ applyEvent(EVENTS[idx]); idx++; updateClock(); } };
+document.getElementById('reset').onclick=()=>{ undoTo(0); playing=true; document.getElementById('play').textContent='Pause'; };
+document.getElementById('scrub').oninput=e=>{ undoTo(+e.target.value); };
+document.getElementById('speed').onchange=e=>speed=+e.target.value;
+// live mode: poll a runs.jsonl served over http; new lines become events as they arrive
+document.getElementById('connect').onclick=async()=>{ const url=document.getElementById('src').value.trim(); if(!url) return;
+  if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
+  undoTo(0); EVENTS.length=0; liveSeen=0; document.getElementById('mode').innerHTML=`Live from <b>${url}</b>`;
+  // clean field: drop the replay's agents and goals, the live feed names its own
+  Object.keys(agents).forEach(k=>delete agents[k]); Object.keys(META.agents).forEach(k=>delete META.agents[k]); goalIds.length=0; Object.keys(META.goals).forEach(k=>delete META.goals[k]); Object.keys(goalCount).forEach(k=>delete goalCount[k]); renderGoals();
+  const poll=async()=>{ try{ const t=await (await fetch(url,{cache:'no-store'})).text(); const lines=t.split('\n').filter(Boolean);
+      for(let i=liveSeen;i<lines.length;i++){ const e=JSON.parse(lines[i]); if(!agents[e.from]) addAgent(e.from); if(!agents[e.to]) addAgent(e.to); if(!META.goals[e.goal]){ META.goals[e.goal]=e.goal; goalIds.push(e.goal); goalColor[e.goal]=GOAL_COLORS[goalIds.length%GOAL_COLORS.length]; goalCount[e.goal]=0; }
+        EVENTS.push(e); applyEvent(e); idx=EVENTS.length; updateClock(); } liveSeen=lines.length; document.getElementById('mode').innerHTML=`Live from <b>${url}</b> · ${liveSeen} events`; }
+    catch(err){ document.getElementById('mode').innerHTML=`Live: <b style="color:#B5452E">cannot reach ${url}</b> (serve the folder with python3 -m http.server 8787)`; } };
+  await poll(); liveTimer=setInterval(poll,1500); };
+function addAgent(id){ const store=(id==='files'||id==='tools'||id==='slack'); const ring=id==='dave'?0.42:id==='coordinator'?0.42:store?1.0:0.72;
+  agents[id]={id,label:id.replace(/_/g,' '),sub:store?'store':'',ring,angle:0,speed:store?0.04:0.11,goal:null,pull:0,glow:0,count:0}; META.agents[id]={label:id,sub:''};
+  // re-space every agent on its ring so new arrivals don't overlap
+  [0.42,0.72,1.0].forEach(r=>{ const on=Object.values(agents).filter(a=>a.ring===r); on.forEach((a,i)=>a.angle=(i/on.length)*Math.PI*2-Math.PI/2+(r===0.72?0.3:0)); }); }
+// hover tips
+cv.addEventListener('mousemove',ev=>{ const r=cv.getBoundingClientRect(); const x=ev.clientX-r.left,y=ev.clientY-r.top; let hit=null;
+  Object.values(agents).forEach(a=>{ if(a._p && Math.hypot(a._p.x-x,a._p.y-y)<18) hit=a; });
+  if(hit){ tip.style.display='block'; tip.style.left=(x+14)+'px'; tip.style.top=(y+10)+'px'; tip.innerHTML=`<b>${hit.label}</b>${hit.sub}<br>${hit.count} events · working toward: ${hit.goal?META.goals[hit.goal]:'nothing yet'}`; } else tip.style.display='none'; });
+renderGoals(); updateClock();
+const live=new URLSearchParams(location.search).get('live'); if(live){ document.getElementById('src').value=live; document.getElementById('connect').click(); }
+const at=+(new URLSearchParams(location.search).get('at')||0); if(at){ undoTo(Math.min(at,total())); pulses.push({e:EVENTS[at-1],t:0,from:agents[EVENTS[at-1].from],to:agents[EVENTS[at-1].to]}); }
+</script></body></html>

@@ -1,0 +1,18 @@
+[package]
+name = "rival-council"
+version = "0.1.0"
+edition = "2021"
+description = "A swarm of rival reviewer agents that debate a lecture deck, rebut each other, and get adjudicated. Built on AutoAgents (Rust)."
+publish = false
+
+[dependencies]
+autoagents = { git = "https://github.com/liquidos-ai/AutoAgents", features = ["anthropic", "openai", "logging"] }
+autoagents-derive = { git = "https://github.com/liquidos-ai/AutoAgents" }
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+serde_json = "1"
+anyhow = "1"
+chrono = { version = "0.4", features = ["clock"] }
+
+[profile.dev]
+opt-level = 1
