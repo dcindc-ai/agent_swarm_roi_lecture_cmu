@@ -2,6 +2,10 @@
 
 A swarm of reviewer agents, built on [AutoAgents](https://github.com/liquidos-ai/AutoAgents) (Rust), that argue about a lecture deck and get adjudicated. Every message in the swarm is logged so you can watch it assemble in the orbit monitor.
 
+![one run of the swarm in the orbit monitor](docs/swarm-run.gif)
+
+*One full run against the stand-in model, recorded from the live monitor. Red dashed edges in round 2 are the rivals reading each other.*
+
 ## What runs
 
 Four agents on one pub/sub runtime (Ractor actors under the hood):
